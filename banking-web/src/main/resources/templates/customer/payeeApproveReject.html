@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Add payee Page</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+  
+  <style>
+.ffooter {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: red;
+  color: white;
+  text-align: center;
+  height: 30px;
+  background-color:#e9ffe7;
+}
+</style>
+
+<script  type="text/javascript">
+
+</script>
+</head>
+<body>
+<header style="height: 30px;background-color: maroon;color:white;">
+ 
+</header>
+ Hello Mr. <span th:utext="${session.userSessionVO.username}" th:unless="${session == null}" style="font-weight: bold;"></span>
+<div class="container">
+ <br/>
+ <br/>
+<a th:href="@{/customer/pendingPayee}">
+<button type="button" class="btn btn-success">Pending payee</button>
+</a>
+
+<a th:href="@{/customer/registeredPayee}">
+<button type="button" class="btn btn-info">My registered payees</button>
+</a>
+ <a th:href="@{/customer/logout}"><button type="button" class="btn btn-warning">Logout</button></a>
+ <br/>
+ <br/>
+  
+ <div style="width: 70%">
+  
+   <form th:action="@{/customer/account/addPayee}" method="POST"  th:object="${payeeInfoVO}" name="addPayeeForm">
+    <input type="hidden" th:value="${session.userSessionVO.username}" th:name="customerId" />
+    <div >
+     <span id="errorMessage" th:utext="${error}" style="color: red;font-size: 14px;"></span>
+    <span id="errorMessage" th:utext="${successMessage}" style="color: blue;font-size: 14px;"></span>
+  
+    <br/>
+    <div>
+      <label for="payeeAccountNo">Payee Account name:</label> <br/>
+      <input type="text" style="width: 50%;"  class="form-control"   id="payeeName" name="payeeName">    
+    </div>
+    
+     <div>
+      <label for="tpayeeAcc">Nickname:</label> <br/>
+      <input type="text" style="width: 50%;"  class="form-control"   id="payeeNickName" name="payeeNickName">   
+    </div>
+    
+    <div >
+      <label for="payeeName">Account Number:</label> <br/>
+      <input type="text" style="width: 50%;"  class="form-control"  id="payeeAccountNo" name="payeeAccountNo" placeholder="Enter the payee account number">   
+    </div>
+    <div >
+      <label for="payeeNickName">Confirm Account number:</label> <br/>
+      <input type="text" style="width: 50%;"  class="form-control"  id="accNumberConfirm" name="accNumberConfirm"  placeholder="Confirm the payee account number">   
+    </div>
+        
+    <div>
+      <label for="remarks">Remarks:</label> <br/>
+      <input type="text"  style="width: 50%;"  class="form-control"  id="remark" name="remarks">      
+    </div>
+   <br/>
+ 
+    <button type="button" id="submitButton" onclick="validateForm();" class="btn btn-primary">Add payee</button>
+   
+  </form>
+  </div>
+</div>
+<footer  class="ffooter">
+</footer>
+
+</body>
+</html>

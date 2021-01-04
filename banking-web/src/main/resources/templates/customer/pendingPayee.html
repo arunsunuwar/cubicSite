@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Pending payee Page</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+  
+  <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
+  
+  
+   
+  <script type="text/javascript">
+  $(document).ready(function() {
+       // $('#enquiryList').DataTable();
+    } );
+  </script>
+  
+  <style>
+  .modalButton {
+		background:coral;
+		color:white;
+		border:0;
+}
+.ffooter {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: red;
+  color: white;
+  text-align: center;
+  height: 30px;
+  background-color:#e9ffe7;
+}
+</style>
+
+<script type="text/javascript">
+  
+function clearMsg(){
+	   $("#errorMessage").html("");
+}
+
+	
+function openModalApprove(id){
+	$('#editApprovePayeePopup').modal({backdrop: 'static', keyboard: false});
+	document.getElementById("payeeId").value = id 
+	//$("#payeeId").html(id);
+	
+	$("#editApprovePayeePopup").modal('show');
+}
+
+function approved(){
+	document.getElementById("approve").disabled = false;
+	document.getElementById("reject").disabled = false;
+	 var urnNumber=$("#urn").val();
+	 var cid= $("#payeeId").val();
+	/*  var promise=fetch("/v3/search/searchURN?cid="+cid);
+	 console.log(promise);
+     promise.then(response=>response.json()).then(function(data){
+    	 if (data.urn==urnNumber){
+    		 console.log("dataMatch");
+    		 fetch("/v3/search/updatePendingPayeeToApproved?cid="+cid);
+    		 $("#found").html("Approved");
+    		 document.getElementById("reject").disabled = true;
+    	 }else{
+    		 $("#found").html("Cannot Approve!!! URN number is incorrect");
+    		 document.getElementById("reject").disabled = false;
+    	 }
+     }) */
+	 var obj={urn:urnNumber,id:cid};
+ 	   //convert above object into JSON
+ 	   var jsonData=JSON.stringify(obj);
+ 	   //Creating 
+ 	   const options = {
+                method: 'POST',
+                body: jsonData,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json'
+                }
+              };
+ 	  var promise=fetch("/v3/search/updatePendingPayeeToApproved",options);
+  	   promise.then(response=>response.json())
+  	   .then(function(data){
+  		          //data ={status:"success"}
+  		          //data ={status:"fail"}
+				 if(data.status=='fail'){
+					 $("#found").html("Cannot Approve!!! URN number is incorrect");
+		    		 document.getElementById("reject").disabled = false;
+		    		 document.getElementById("approve").disabled = false;	
+				 }	 
+				 else if(data.status=='pass'){
+		    		 $("#found").html("Approved");
+		    		 document.getElementById("reject").disabled = true;	
+		    		 document.getElementById("approve").disabled = true;	
+				 }	
+  	   });
+ }
+ 
+function rejected(){
+	document.getElementById("approve").disabled = false;
+	document.getElementById("reject").disabled = false;
+	 var urnNumber=$("#urn").val();
+	 var cid= $("#payeeId").val();
+	 var promise=fetch("/v3/search/searchURN?cid="+cid);
+	 console.log(promise);
+    promise.then(response=>response.json()).then(function(data){
+   	 if (data.urn==urnNumber){
+   		 console.log("Reject");
+		 fetch("/v3/search/rejectPayee?cid="+cid);
+		 $("#found").html("Rejected");
+		 document.getElementById("approve").disabled = true;
+		 document.getElementById("reject").disabled = true;
+		
+   	 }else{
+   		 $("#found").html("Cannot Reject!!! URN number is incorrect");
+   		document.getElementById("approve").disabled = false;
+   		document.getElementById("reject").disabled = false;
+   	 }
+    })
+}
+  
+  function cancel(){
+	  window.location.reload();
+  }
+</script>
+
+</head>
+<body>
+
+
+<header style="height: 30px;background-color: maroon;color:white;">
+ 
+</header>
+<div class="container">
+  <br/><br/>
+  <a th:href="@{/customer/addPayee}"> 
+  <button type="button" class="btn btn-primary">Add payee</button>
+  </a>
+
+<a th:href="@{/customer/registeredPayee}">
+<button type="button" class="btn btn-info">My registered payees</button>
+</a>
+ <a th:href="@{/customer/logout}"><button type="button" class="btn btn-warning">Logout</button></a>
+ <br/>
+  <div style="width: 100%">
+ <hr/>
+    <table id="enquiryList" class="table table-striped table-bordered" style="width:100%">
+  <thead>
+  <tr>
+  <td> S.No. </td>
+  <td>Name </td>
+  <td> Nickname </td>
+  <td> Payee account number </td>
+   <td>Request date</td>
+   <td> Remark</td>
+   <td> Status </td>
+    <td> Action </td>
+  </tr>
+  </thead>
+ 
+  <tbody>
+  <tr th:each="payeeVO,iterationStatus: ${payeeInfoList}">
+  	<td th:text="${iterationStatus.count}" />
+    <td th:text="${payeeVO.payeeName}"/>
+    <td th:text="${payeeVO.payeeNickName}"/>
+    <td th:text="${payeeVO.payeeAccountNo}"/>
+    <td th:text="${#dates.format(payeeVO.doe, 'dd-MMM-yyyy HH:mm')}"></td>
+    <td th:text="${payeeVO.remarks}"/>
+    <td th:text="${payeeVO.payeeStatus}"/>
+    <td> 
+         <button type="button" class="modalButton" th:onclick="|openModalApprove('${payeeVO.id}')|">Action</button>
+     </td>
+  
+    
+  </tr>
+  </tbody>
+  </table>
+  <br/>
+  <hr/>
+  </div>
+</div>
+<footer  class="ffooter">
+</footer>
+
+
+  <!-- The APPROVE PAYEE Modal -->
+  <div class="modal" id="editApprovePayeePopup">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <!-- Modal Header -->
+        <form action="@{/customer/pendingPayeeRedirect}" method="POST" id="pendingPayeeFrom" name="pendingPayeeFrom">
+        <input type="hidden" name="cid" id="cid"/>
+        <input type="hidden" name="payeeId" id="payeeId"/>
+        <div class="modal-header">
+          <h2 class="modal-title">
+          <img src="" id="photophoto" style="height: 60px;"/>
+          Confirm payee</h2>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+          <span  style="color:blue; font-size: 16px;">A urn number has been sent to your email.Please check your email</span>
+        <!-- Modal body -->
+        <div class="modal-body">
+           
+            URN Number:
+            <input type="text" name="urn" id="urn" class="form-control" placeholder="Enter URN number">
+           <br>
+           <span id="found"  style="color:red;"></span>
+        </div>
+        
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button type="button" id="approve" onclick="javascript:approved();" class="btn btn-success">Approve</button>
+           <button type="button" id="reject" onclick="javascript:rejected();" class="btn btn-warning">Reject</button>
+         <button type="button" onclick="javascript:cancel();" class="btn btn-secondary">Close</button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+ 
+
+</body>
+</html>

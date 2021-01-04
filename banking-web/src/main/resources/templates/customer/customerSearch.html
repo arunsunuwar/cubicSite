@@ -1,0 +1,349 @@
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:th="http://www.thymeleaf.org">
+    
+<head>
+  <title>Customer Search</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+  <style>
+.ffooter {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: red;
+  color: white;
+  text-align: center;
+  height: 30px;
+  background-color:#e9ffe7;
+}
+span.a {
+  display: inline; /* the default for span */
+}
+.modalButton {
+		background:coral;
+		color:white;
+		border:0;
+}
+</style>
+
+ <script type="text/javascript">
+ 
+ //jQuery Ready Hander
+ $(document).ready(function(){
+		$("#imgInp").change(function() {
+	  		readURL(this);
+		});
+ }); 
+
+//Code which is used to preview the image 
+function readURL(input) {
+ if (input.files && input.files[0]) {
+   var reader = new FileReader();
+   reader.onload = function(e) {
+     $('#ppimage').attr('src', e.target.result);
+   }
+   reader.readAsDataURL(input.files[0]); // convert to base64 string
+ }
+}
+ 
+ function openModal(email, name) {
+	 document.getElementById("customerName").value = name 
+	 document.getElementById("customerEmail").value = email 	
+	 $("#found").empty();
+		$("#ccustomerName").html(name);
+		
+		$("#ccustomerEmail").html(email);
+		
+ 		var imgURL = "/load/image?email="+email;
+		$("#pimage").attr("src",imgURL); 
+		
+		$("#frontcard").attr("src","/images/credit-card-front-template.jpg");
+		
+		$("#backcard").attr("src","/images/credit-card-back-template.jpg");
+ 
+		$("#generateCard").modal({show : true});	
+	}
+ 
+ function cardViewer(){
+	 $("#found").empty();
+		var name= $("#customerName").val();
+		var email=$("#customerEmail").val();
+		 var promise=fetch("/v3/search/creditCardInfo?email="+email);
+		 console.log(promise);
+		promise.then(response=>response.json()).then(function(data){
+			if (data==null){
+			console.log("No data");
+				$("#found").html("No card to view. Please generate one");
+			}else{
+				$("#frontcard").attr("src","/v3/load/photoSearchFrontCard?email="+email);
+				$("#backcard").attr("src","/v3/load/photoSearchBackCard?email="+email);
+			}})
+	}
+ 
+ function emailGenerator(){
+	 var email=$("#customerEmail").val();
+	 var promise=fetch("/v3/search/creditCardInfo?email="+email);
+     promise.then(response=>response.json()).then(function(data){
+    	 
+    	 if (data==null){
+    		 console.log("No data");
+    		 document.getElementById("emailGen").submit();
+    		 $("#found").html("Wait!! Your card is being generated.");
+    	 }else{
+    		 console.log("data found");
+    	 $("#frontcard").attr("src","/v3/load/photoSearchFrontCard?email="+email);
+ 		$("#backcard").attr("src","/v3/load/photoSearchBackCard?email="+email);
+ 		$("#found").html("Sorry, you have an existing card.")
+     }})
+ }
+ 
+        function showCustomer() {
+            var searchText=$("#nameOrId").val();
+            console.log("searchText = "+searchText);
+            if (searchText.length==0){
+            	 $("#alltable").show();
+            	 /* var promise=fetch("/v3/customer/customerAllSearch");
+                 promise.then(response=>response.json()).then(function(data){
+                 	 var temp = '';
+                      $.each(data,function(key,value){
+                    	 var rows=$("#trow").clone();
+          				var tablebody=$("#tbody");
+          				tablebody.append(rows);
+          			$("#pphoto").html("<img src=/load/image?email="+value.email+" style=height:150px>");
+          			 $("#alltable").show();
+    
+          		}); 
+                      $('#alltable').append(temp);
+            }); */
+            }else
+            	{ 
+            //AJAX Call to fetch data
+            //Rest API call
+            //v3/customer/app/status
+            var promise=fetch("/v3/customer/customerSearch?searchText="+searchText);
+            promise.then(response=>response.json()).then(function(data){
+            	 $("#alltable").hide();
+            	 $("#body").empty();
+            	 var temp = '';
+                 $.each(data,function(key,value){
+                 console.log(data);
+                 temp += '<tr>';
+                 temp += '<td>'+ (key+1) +'</td>';
+                 temp += '<td>'+value.name+'</td>';
+                 temp += '<td>'+value.email+'</td>';
+                 temp += '<td>'+value.gender+'</td>';
+                 temp += "<td><img src=/load/image?email="+value.email+" height=120px></td>";
+                 temp += '<td>'+value.doe+'</td>';
+                temp += '<td><button type="button" class="modalButton" onclick="openModal(\''+value.email+'\',\''+value.name+'\');">Generate</button></td>'; 
+                 temp += '</tr>'; 
+                 $("#pdtable").show(); 
+                 });
+                 $('#pdtable').append(temp);
+        }).catch(error=>{
+                	$("#errorMessage").html("No data found!!");
+                	console.log("No data");
+                 	//$("#pdtable").hide();
+                 });
+     	}
+     	}
+        /*  console.log(data);
+        var len=data.length;
+        $.each(data,function(key,value){
+        $("#sno").html(len);
+        $("#pname").html(value.name);
+        $("#pemail").html(value.email);
+        $("#pgender").html(value.gender);
+        $("#pphoto").html("<img src=/v3/load/image?email="+value.email+"style=height:150px>");
+        $("#pdoe").html(value.dob);       
+        $("#pdtable").show(); 
+    }); 
+        
+}).catch(error=>{alert("Error received")});
+} */
+
+
+       function messageClear(){
+    	   var searchText=$("#nameOrId").val();
+    	   if(searchText.length==0){
+    		   $("#pdtable").remove();
+    		   $("#body").empty();
+    	   }
+    	   $("#errorMessage").html("");
+       }
+       
+	function resetTable(){
+		$("#alltable").hide();
+		   $("#pdtable").hide();
+		   $("#body").empty();
+	   };
+
+        function authUser() {
+        	var  uname=$("#username").val();
+        	if(uname.length==0) {
+        		 $("#errorMessage").html("Hey!, username cannot be blank!");
+        		 $("#username").focus();
+        		 return;
+        	}
+
+        	var  upassword=$("#password").val();
+            if(upassword.length==0) {
+                 $("#errorMessage").html("Hey!, password cannot be blank!");
+                 $("#password").focus();
+                 return;
+            }
+
+            var jsonObj={username:uname,password:upassword};
+            var jsonString= JSON.stringify(jsonObj);
+
+            //AJAX - >>> Node.js
+            const options = {
+                    method: 'POST',
+                    body: jsonString,
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Accept': 'application/json'
+                    }
+                  };
+
+            var promise=fetch('/v3/user/login', options);
+            promise.then(res => res.json()).then(function(data){
+            	 if(data.code==200) {
+            		    //submitting 
+            		    $("#loginForm").submit();
+            		    //document.loginForm.submit();
+            		    //document.getElementById("loginForm").submit();
+            	 }else {
+            		  $("#errorMessage").html(data.message);
+            	 }
+            });
+
+        }
+
+ </script>
+
+</head>
+<body>
+<header style="height: 30px;background-color: maroon;">
+</header>
+	<div class="container">
+		<h2>Customer Search Page</h2>
+		<img th:src="@{/images/status.jpg}" alt="Logo" style="height: 140px" />
+		<br /> <span th:utext="${error}"
+			style="color: red; font-size: 18px; font-weight: bold;"
+			id="errorMessage"></span> <span th:utext="${message}"
+			style="color: blue; font-size: 18px; font-weight: bold;"></span>
+		<div style="width: 70%">
+			<form th:action="@{/v3/customer/customerSearch}" method="GET"
+				id="appStatusForm" name="appStatusForm">
+				<div class="form-group">
+					<label for="username">Enter Name or Email:</label> <input
+						type="text" style="width: 60%;" class="form-control"
+						name="nameOrId" id="nameOrId" placeholder="Enter username"
+						onkeyup="messageClear();">
+				</div>
+				<button type="button" class="btn btn-primary"
+					onclick="showCustomer();">Search</button>
+				<button type="reset" class="btn btn-danger" onclick="resetTable();">Reset</button>
+
+				<a th:href="@{/customer/login}">
+					<button type="button" class="btn btn-warning">Login</button>
+				</a>
+			</form>
+			<span id="done"></span>
+		</div>
+		<hr />
+		<p>
+		<table class="table table-bordered" style="width: 60%; display: none;"
+			id="pdtable">
+			<thead>
+				<tr>
+					<th>S.No</th>
+					<th>Name</th>
+					<th>Email</th>
+					<th>Gender</th>
+					<th>Photo</th>
+					<th>DOE</th>
+					<th>Generate</th>
+				</tr>
+			</thead>
+			<tbody id="body">
+			</tbody>
+		</table>
+		<table class="table table-bordered" style="width: 60%; display: none;"
+			id="alltable" >
+			<thead>
+				<tr>
+					<th>S.No</th>
+					<th>Name</th>
+					<th>Email</th>
+					<th>Gender</th>
+					<th>Photo</th>
+					<th>DOE</th>
+					<th>Generate</th>
+				</tr>
+			</thead>
+			<tbody id="tttbody">
+			<tr id="trow" th:each="listOption,iterationStatus: ${listOptions}">
+					<td th:text="${iterationStatus.count}" />
+    				<td th:text="${listOption.name}" />
+    				<td th:text="${listOption.email}" />
+    				<td th:text="${listOption.gender}" />
+    				<!-- <td id="pphoto"> -->
+    				<td> <img style=height:150px th:src="'/load/image?email='+${listOption.email}"/>
+    				</td>
+    				<td th:text="${listOption.doe}" />
+    				<td> 
+    				<!-- <a th:href="'javascript:openModal(\'' + ${listOption.email} + '\' , \'' + ${listOption.name} + '\' );'">Generate</a> -->
+    				 <button type="button" class="modalButton" th:onclick="|openModal('${listOption.email}','${listOption.name}')|">Generate</button>
+					</td>
+			</tr>
+				<!-- Modal -->
+  						<div class="modal" id="generateCard">
+    				  	<div class="modal-dialog">
+    					<div class="modal-content">
+    					<form th:action=@{/customer/cardGenerator} method="POST" id="emailGen">
+      					<div class="modal-header">
+        				<h5 class="modal-title" id="exampleModalLabel">Credit Card Generator</h5>
+        				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          				<span aria-hidden="true">&times;</span>
+        				</button>
+      					</div>
+      				
+      					<div class="modal-body">
+      					<input type="hidden" name="customerName" id="customerName"/>
+      					<input type="hidden" name="customerEmail" id="customerEmail"/>
+       					<br>
+       					<span class="a">
+       					<label>Email : <span id="ccustomerEmail" style="font-size: 18px;font-weight: bold; "></span></label>   
+       					<img src="" id="pimage" style="height: 75px; float:right;"> 				
+       					</span>
+       					<br>
+       					<label>Name : <span id="ccustomerName" style="font-size: 18px;font-weight: bold; "></span></label>
+       					<br>
+       					<span id="found" style="color:red;"></span>
+       					<img id="frontcard" style="height: 200px;">
+       					<img id="backcard" style="height: 200px;">
+       					<br>
+       					</div>
+      					<div class="modal-footer">
+      					<button type="button" class="btn btn-danger" onclick="javascript:cardViewer();" id="generate">View</button>
+        				<button type="button" onclick="javascript:emailGenerator();" class="btn btn-warning">Generate</button>
+        				<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+      					</div>
+      					</form>
+    					</div>
+  						</div>
+						</div>
+			</tbody>
+		</table>
+	</div>
+
+</body>
+</html>
